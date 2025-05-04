@@ -4,7 +4,7 @@ yfinance
 numpy
 matplotlib
 plotly
-ta
+ta-lib
 textblob
 scikit-learn
 transformers
