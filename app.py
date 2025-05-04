@@ -13,16 +13,15 @@ import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
 from tqdm import tqdm
 import warnings
-import talib
-from pandas.plotting import register_matplotlib_converters
+import pandas_ta as ta  # Using pandas-ta instead of talib
 import requests
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import time
+import plotly.express as px
 
 # Suppress warnings for cleaner output
 warnings.filterwarnings('ignore')
-register_matplotlib_converters()
 
 # Download NLTK resources
 nltk.download('vader_lexicon')
@@ -117,7 +116,7 @@ class StockNewsAnalyzer:
             return 0
     
     def get_stock_data(self, ticker, period="1y"):
-        """Fetch stock data from yfinance with technical indicators"""
+        """Fetch stock data from yfinance with technical indicators using pandas-ta"""
         try:
             stock = yf.Ticker(ticker)
             hist = stock.history(period=period)
@@ -125,12 +124,22 @@ class StockNewsAnalyzer:
             if hist.empty:
                 return None
                 
-            # Calculate technical indicators
-            hist['MA_50'] = talib.SMA(hist['Close'], timeperiod=50)
-            hist['MA_200'] = talib.SMA(hist['Close'], timeperiod=200)
-            hist['RSI'] = talib.RSI(hist['Close'], timeperiod=14)
-            hist['MACD'], hist['MACD_signal'], _ = talib.MACD(hist['Close'])
-            hist['BB_upper'], hist['BB_middle'], hist['BB_lower'] = talib.BBANDS(hist['Close'])
+            # Calculate technical indicators using pandas-ta
+            # Moving Averages
+            hist.ta.sma(length=50, append=True, col_names=('MA_50',))
+            hist.ta.sma(length=200, append=True, col_names=('MA_200',))
+            
+            # RSI
+            hist.ta.rsi(length=14, append=True, col_names=('RSI',))
+            
+            # MACD
+            hist.ta.macd(append=True, col_names=('MACD', 'MACD_signal', 'MACD_hist'))
+            
+            # Bollinger Bands
+            hist.ta.bbands(length=20, std=2, append=True, col_names=('BB_upper', 'BB_middle', 'BB_lower'))
+            
+            # Volume
+            hist['Volume'] = hist['Volume']
             
             # Get fundamental data
             info = stock.info
