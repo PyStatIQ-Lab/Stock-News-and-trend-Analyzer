@@ -13,12 +13,14 @@ import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
 from tqdm import tqdm
 import warnings
-import pandas_ta as ta  # Using pandas-ta instead of talib
 import requests
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import time
 import plotly.express as px
+from ta.trend import MACD
+from ta.momentum import RSIIndicator
+from ta.volatility import BollingerBands
 
 # Suppress warnings for cleaner output
 warnings.filterwarnings('ignore')
@@ -115,40 +117,34 @@ class StockNewsAnalyzer:
         except:
             return 0
     
-def get_stock_data(self, ticker, period="1y"):
-    try:
-        stock = yf.Ticker(ticker)
-        hist = stock.history(period=period)
-        
-        if hist.empty:
-            return None
+    def get_stock_data(self, ticker, period="1y"):
+        """Fetch stock data from yfinance with technical indicators using ta library"""
+        try:
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period=period)
             
-        # Calculate indicators using ta library
-        from ta.trend import MACD
-        from ta.momentum import RSIIndicator
-        from ta.volatility import BollingerBands
-        
-        # Moving Averages
-        hist['MA_50'] = hist['Close'].rolling(window=50).mean()
-        hist['MA_200'] = hist['Close'].rolling(window=200).mean()
-        
-        # RSI
-        rsi = RSIIndicator(hist['Close'], window=14)
-        hist['RSI'] = rsi.rsi()
-        
-        # MACD
-        macd = MACD(hist['Close'])
-        hist['MACD'] = macd.macd()
-        hist['MACD_signal'] = macd.macd_signal()
-        
-        # Bollinger Bands
-        bb = BollingerBands(hist['Close'])
-        hist['BB_upper'] = bb.bollinger_hband()
-        hist['BB_middle'] = bb.bollinger_mavg()
-        hist['BB_lower'] = bb.bollinger_lband()
-                  
-            # Volume
-            hist['Volume'] = hist['Volume']
+            if hist.empty:
+                return None
+                
+            # Calculate indicators using ta library
+            # Moving Averages
+            hist['MA_50'] = hist['Close'].rolling(window=50).mean()
+            hist['MA_200'] = hist['Close'].rolling(window=200).mean()
+            
+            # RSI
+            rsi = RSIIndicator(hist['Close'], window=14)
+            hist['RSI'] = rsi.rsi()
+            
+            # MACD
+            macd = MACD(hist['Close'])
+            hist['MACD'] = macd.macd()
+            hist['MACD_signal'] = macd.macd_signal()
+            
+            # Bollinger Bands
+            bb = BollingerBands(hist['Close'])
+            hist['BB_upper'] = bb.bollinger_hband()
+            hist['BB_middle'] = bb.bollinger_mavg()
+            hist['BB_lower'] = bb.bollinger_lband()
             
             # Get fundamental data
             info = stock.info
