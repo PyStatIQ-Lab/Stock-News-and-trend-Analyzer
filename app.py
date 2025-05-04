@@ -146,9 +146,7 @@ def get_stock_data(self, ticker, period="1y"):
         hist['BB_upper'] = bb.bollinger_hband()
         hist['BB_middle'] = bb.bollinger_mavg()
         hist['BB_lower'] = bb.bollinger_lband()
-        
-        # Rest of your method remains the same...
-            
+                  
             # Volume
             hist['Volume'] = hist['Volume']
             
