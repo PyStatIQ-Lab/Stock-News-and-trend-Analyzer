@@ -115,28 +115,39 @@ class StockNewsAnalyzer:
         except:
             return 0
     
-    def get_stock_data(self, ticker, period="1y"):
-        """Fetch stock data from yfinance with technical indicators using pandas-ta"""
-        try:
-            stock = yf.Ticker(ticker)
-            hist = stock.history(period=period)
+def get_stock_data(self, ticker, period="1y"):
+    try:
+        stock = yf.Ticker(ticker)
+        hist = stock.history(period=period)
+        
+        if hist.empty:
+            return None
             
-            if hist.empty:
-                return None
-                
-            # Calculate technical indicators using pandas-ta
-            # Moving Averages
-            hist.ta.sma(length=50, append=True, col_names=('MA_50',))
-            hist.ta.sma(length=200, append=True, col_names=('MA_200',))
-            
-            # RSI
-            hist.ta.rsi(length=14, append=True, col_names=('RSI',))
-            
-            # MACD
-            hist.ta.macd(append=True, col_names=('MACD', 'MACD_signal', 'MACD_hist'))
-            
-            # Bollinger Bands
-            hist.ta.bbands(length=20, std=2, append=True, col_names=('BB_upper', 'BB_middle', 'BB_lower'))
+        # Calculate indicators using ta library
+        from ta.trend import MACD
+        from ta.momentum import RSIIndicator
+        from ta.volatility import BollingerBands
+        
+        # Moving Averages
+        hist['MA_50'] = hist['Close'].rolling(window=50).mean()
+        hist['MA_200'] = hist['Close'].rolling(window=200).mean()
+        
+        # RSI
+        rsi = RSIIndicator(hist['Close'], window=14)
+        hist['RSI'] = rsi.rsi()
+        
+        # MACD
+        macd = MACD(hist['Close'])
+        hist['MACD'] = macd.macd()
+        hist['MACD_signal'] = macd.macd_signal()
+        
+        # Bollinger Bands
+        bb = BollingerBands(hist['Close'])
+        hist['BB_upper'] = bb.bollinger_hband()
+        hist['BB_middle'] = bb.bollinger_mavg()
+        hist['BB_lower'] = bb.bollinger_lband()
+        
+        # Rest of your method remains the same...
             
             # Volume
             hist['Volume'] = hist['Volume']
