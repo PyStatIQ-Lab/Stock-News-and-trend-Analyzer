@@ -8,3 +8,4 @@ pandas-ta
 textblob
 scikit-learn
 transformers
+setuptools
